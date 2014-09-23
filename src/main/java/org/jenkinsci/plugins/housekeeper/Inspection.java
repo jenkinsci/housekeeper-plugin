@@ -1,16 +1,17 @@
 package org.jenkinsci.plugins.housekeeper;
 
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
+import hudson.FilePath;
+import hudson.model.InvisibleAction;
+import hudson.model.Node;
+import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.HashSet;
 import java.util.Set;
 
 import com.google.common.collect.Sets;
-
-import hudson.model.InvisibleAction;
-import hudson.model.Node;
-import hudson.util.StreamTaskListener;
 
 public final class Inspection extends InvisibleAction {
 
@@ -61,13 +62,28 @@ public final class Inspection extends InvisibleAction {
     }
 
     private Set<String> execute() {
+        FilePath script = null;
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            node.createLauncher(new StreamTaskListener(output)).launch().cmdAsSingleString(definition.command()).stdout(output).stderr(NULL_OUTPUT_STREAM).join();
+            script = node.getRootPath().createTextTempFile("housekeeper", ".sh", definition.command(), false);
+            node.createLauncher(new StreamTaskListener(NULL_OUTPUT_STREAM)).launch()
+                                                                           .cmds(new String[] {"sh", script.getRemote()})
+                                                                           .stdout(output)
+                                                                           .stderr(NULL_OUTPUT_STREAM)
+                                                                           .join();
         }
         catch (Exception e) {
-            failures.add(e.getMessage());
+            final ByteArrayOutputStream exception = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(exception));
+            failures.add(exception.toString());
         }
-        return definition.process(output.toString());
+        finally {
+            try {
+                if (script != null) {
+                    script.delete();
+                }
+            } catch (Exception e1) { }
+        }
+        return definition.process(output.toString().split("\\n"));
     }
 }

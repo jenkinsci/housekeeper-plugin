@@ -6,23 +6,26 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 
 public final class InspectionDefinition {
 
     private final String title;
     private final String command;
-    private final Pattern regEx;
-    private final Set<String> whitelist;
+    private final Pattern extractionPattern;
+    private final Set<Pattern> whitelistPatterns = Sets.newHashSet();
 
-    public InspectionDefinition(String title, String command, String regEx) {
-        this(title, command, regEx, new HashSet<String>());
+    public InspectionDefinition(String title, String command, String extractionRegEx) {
+        this(title, command, extractionRegEx, new HashSet<String>());
     }
 
-    public InspectionDefinition(String title, String command, String regEx, Set<String> whitelist) {
+    public InspectionDefinition(String title, String command, String extractionRegEx, Set<String> whitelistRegExes) {
         this.title = title;
         this.command = command;
-        this.regEx = Pattern.compile(regEx);
-        this.whitelist = new HashSet<String>(whitelist);
+        this.extractionPattern = Pattern.compile(extractionRegEx);
+        for (String regEx : whitelistRegExes) {
+            this.whitelistPatterns.add(Pattern.compile(regEx));
+        }
     }
 
     public String title() {
@@ -33,17 +36,28 @@ public final class InspectionDefinition {
         return command;
     }
 
-    public Set<String> process(String stdout) {
+    public Set<String> process(String[] outputData) {
         final Set<String> result = new HashSet<String>();
-        final String[] outputData = stdout.split("\\n");
         for (String datum : outputData) {
-            Matcher matcher = regEx.matcher(datum);
+            Matcher matcher = extractionPattern.matcher(datum);
             if (matcher.matches()) {
-                result.add(matcher.group(1));
+                final String candidate = matcher.group(1);
+                if (!whitelisted(candidate)) {
+                    result.add(candidate);
+                }
             }
         }
-        result.removeAll(whitelist);
+        result.removeAll(whitelistPatterns);
         return ImmutableSet.copyOf(result);
+    }
+
+    private boolean whitelisted(String candidate) {
+        for (Pattern pattern : whitelistPatterns) {
+            if (pattern.matcher(candidate).matches()) {
+                return true;
+            }
+        }
+        return false;
     }
 
 }

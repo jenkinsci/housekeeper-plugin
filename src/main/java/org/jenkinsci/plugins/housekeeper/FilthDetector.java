@@ -16,6 +16,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
 @Extension(ordinal = FilthDetector.ORDINAL)
@@ -25,7 +26,7 @@ public final class FilthDetector extends RunListener<AbstractBuild<?,?>> {
 
     private final Iterable<InspectionDefinition> definitions = ImmutableList.of(
                         new InspectionDefinition("Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*"),
-                        new InspectionDefinition("Processes", "ps --no-header -eo args", "(.*)"));
+                        new InspectionDefinition("Processes", "ps --no-header -eo args", "(.*)", ImmutableSet.of("sh /\\S+/housekeeper\\w+\\.sh")));
 
     @Override
     public Environment setUpEnvironment(@SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, RunnerAbortedException {
