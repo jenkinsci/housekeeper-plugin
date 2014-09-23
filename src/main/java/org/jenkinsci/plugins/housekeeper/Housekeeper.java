@@ -4,10 +4,12 @@ import hudson.Extension;
 import hudson.Launcher;
 import hudson.console.ExpandableDetailsNote;
 import hudson.model.BuildListener;
+import hudson.model.Describable;
 import hudson.model.Environment;
 import hudson.model.Result;
 import hudson.model.TaskListener;
 import hudson.model.AbstractBuild;
+import hudson.model.Descriptor;
 import hudson.model.Node;
 import hudson.model.Run.RunnerAbortedException;
 import hudson.model.listeners.RunListener;
@@ -15,24 +17,29 @@ import hudson.model.listeners.RunListener;
 import java.io.IOException;
 import java.util.List;
 
+import jenkins.model.Jenkins;
+import net.sf.json.JSONObject;
+
+import org.kohsuke.stapler.StaplerRequest;
+import org.kohsuke.stapler.export.Exported;
+
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 
-@Extension(ordinal = FilthDetector.ORDINAL)
-public final class FilthDetector extends RunListener<AbstractBuild<?,?>> {
+@Extension(ordinal = Housekeeper.ORDINAL)
+public final class Housekeeper extends RunListener<AbstractBuild<?,?>> implements Describable<Housekeeper> {
 
     public static final int ORDINAL = 30001;
 
-    private final Iterable<InspectionDefinition> definitions = ImmutableList.of(
-                        new InspectionDefinition("Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*"),
-                        new InspectionDefinition("Processes", "ps --no-header -eo args", "(.*)", ImmutableSet.of("sh /\\S+/housekeeper\\w+\\.sh")));
+    private transient final Iterable<InspectionDefinition> definitions = ImmutableList.of(
+                             new InspectionDefinition("Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*", ""),
+                             new InspectionDefinition("Processes", "ps --no-header -eo args", "(.*)", "sh /\\S+/housekeeper\\w+\\.sh"));
 
     @Override
     public Environment setUpEnvironment(@SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, RunnerAbortedException {
         if (!isMatrixMaster(build)) {
             final Node node = build.getBuiltOn();
-            for (InspectionDefinition definition : definitions) {
+            for (InspectionDefinition definition : getDescriptor().getChecks()) {
                 final Inspection inspection = new Inspection(definition, node);
                 inspection.executeBeforeCheck();
                 build.addAction(inspection);
@@ -79,5 +86,39 @@ public final class FilthDetector extends RunListener<AbstractBuild<?,?>> {
 
     private boolean isMatrixMaster(AbstractBuild<?, ?> build) {
         return "MatrixBuild".equals(build.getClass().getSimpleName());
+    }
+
+    @Override
+    public DescriptorImpl getDescriptor() {
+        return (DescriptorImpl)Jenkins.getInstance().getDescriptorOrDie(Housekeeper.class);
+    }
+
+    @Extension
+    public static class DescriptorImpl extends Descriptor<Housekeeper> {
+        private boolean enabled = true;
+        private InspectionDefinition[] checks = new InspectionDefinition[0];
+
+        @Exported
+        public InspectionDefinition[] getChecks() {
+            return checks;
+        }
+
+        @Exported
+        public boolean isEnabled() {
+            return enabled;
+        }
+
+        @Override
+        public String getDisplayName() {
+            return "Housekeeper";
+        }
+
+        @Override
+        public boolean configure(StaplerRequest req, JSONObject json) throws hudson.model.Descriptor.FormException {
+            enabled = json.getBoolean("enabled");
+            List<InspectionDefinition> checklist = req.bindJSONToList(InspectionDefinition.class, json.getJSONArray("checks"));
+            this.checks = checklist.toArray(new InspectionDefinition[checklist.size()]);
+            return true;
+        }
     }
 }

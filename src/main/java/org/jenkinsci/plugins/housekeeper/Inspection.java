@@ -28,7 +28,7 @@ public final class Inspection extends InvisibleAction {
     }
 
     public String title() {
-        return definition.title();
+        return definition.getTitle();
     }
 
     public void executeBeforeCheck() {
@@ -65,7 +65,7 @@ public final class Inspection extends InvisibleAction {
         FilePath script = null;
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
-            script = node.getRootPath().createTextTempFile("housekeeper", ".sh", definition.command(), false);
+            script = node.getRootPath().createTextTempFile("housekeeper", ".sh", definition.getCommand(), false);
             node.createLauncher(new StreamTaskListener(NULL_OUTPUT_STREAM)).launch()
                                                                            .cmds(new String[] {"sh", script.getRemote()})
                                                                            .stdout(output)

@@ -1,0 +1,30 @@
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
+  <f:section title="Housekeeper">
+        <f:entry name="enabled" title="Enabled" field="enabled">
+            <f:checkbox default="true" />
+        </f:entry> 
+        <f:entry title="Checks">
+          <f:repeatable field="checks">
+              <table width="100%">
+                  <f:entry field="title" title="Title">
+                      <f:textbox />
+                  </f:entry>
+                  <f:entry field="command" title="Command">
+                      <f:textbox />
+                  </f:entry>
+                  <f:entry field="extractionRegEx" title="Extraction RegEx">
+                      <f:textbox />
+                  </f:entry>
+                  <f:entry field="whitelistRegExList" title="White List RegEx List">
+                      <f:textbox />
+                  </f:entry>
+                  <f:entry>
+                      <div align="right">
+                          <f:repeatableDeleteButton />
+                      </div>
+                  </f:entry>
+              </table>
+          </f:repeatable>
+        </f:entry>
+  </f:section>
+</j:jelly>
