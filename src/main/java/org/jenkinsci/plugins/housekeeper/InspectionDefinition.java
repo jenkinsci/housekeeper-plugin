@@ -5,20 +5,28 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.google.common.collect.ImmutableSet;
+
 public final class InspectionDefinition {
 
+    private final String title;
     private final String command;
     private final Pattern regEx;
     private final Set<String> whitelist;
 
-    public InspectionDefinition(String command, String regEx) {
-        this(command, regEx, new HashSet<String>());
+    public InspectionDefinition(String title, String command, String regEx) {
+        this(title, command, regEx, new HashSet<String>());
     }
 
-    public InspectionDefinition(String command, String regEx, Set<String> whitelist) {
+    public InspectionDefinition(String title, String command, String regEx, Set<String> whitelist) {
+        this.title = title;
         this.command = command;
         this.regEx = Pattern.compile(regEx);
         this.whitelist = new HashSet<String>(whitelist);
+    }
+
+    public String title() {
+        return title;
     }
 
     public String command() {
@@ -35,7 +43,7 @@ public final class InspectionDefinition {
             }
         }
         result.removeAll(whitelist);
-        return result;
+        return ImmutableSet.copyOf(result);
     }
 
 }

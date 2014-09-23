@@ -3,7 +3,10 @@ package org.jenkinsci.plugins.housekeeper;
 import static org.apache.commons.io.output.NullOutputStream.NULL_OUTPUT_STREAM;
 
 import java.io.ByteArrayOutputStream;
+import java.util.HashSet;
 import java.util.Set;
+
+import com.google.common.collect.Sets;
 
 import hudson.model.InvisibleAction;
 import hudson.model.Node;
@@ -13,6 +16,7 @@ public final class Inspection extends InvisibleAction {
 
     private final InspectionDefinition definition;
     private final Node node;
+    private final Set<String> failures = Sets.newHashSet();
 
     private Set<String> before;
     private Set<String> after;
@@ -22,39 +26,48 @@ public final class Inspection extends InvisibleAction {
         this.node = node;
     }
 
-    public void before() {
+    public String title() {
+        return definition.title();
+    }
+
+    public void executeBeforeCheck() {
         before = execute();
     }
 
-    public void after() {
+    public void executeAfterCheck() {
         after = execute();
     }
 
-    public boolean passed() {
-        return before.equals(after);
+    public boolean hasFailed() {
+        return !(failures.isEmpty() && before.containsAll(after));
+    }
+
+    public String report() {
+        final StringBuilder report = new StringBuilder();
+
+        if (!failures.isEmpty()) {
+            for (String failure : failures) {
+                report.append("FAILED TO RUN REPORT: ").append(failure);
+            }
+            return report.toString();
+        }
+
+        final HashSet<String> newDirt = Sets.newHashSet(after);
+        newDirt.removeAll(before);
+        for (String speck : newDirt) {
+            report.append(speck).append('\n');
+        }
+        return report.toString();
     }
 
     private Set<String> execute() {
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
             node.createLauncher(new StreamTaskListener(output)).launch().cmdAsSingleString(definition.command()).stdout(output).stderr(NULL_OUTPUT_STREAM).join();
-        } catch (Exception e) {
-            // wah
         }
-        final Set<String> result = definition.process(output.toString());
-        return result;
-    }
-
-    public String report() {
-        final StringBuilder report = new StringBuilder();
-        report.append("<pre>");
-        for (String string : before) {
-            report.append(string).append('\n');
+        catch (Exception e) {
+            failures.add(e.getMessage());
         }
-        for (String string : after) {
-            report.append(string).append('\n');
-        }
-        report.append("</pre>");
-        return report.toString();
+        return definition.process(output.toString());
     }
 }
