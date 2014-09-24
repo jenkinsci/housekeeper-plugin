@@ -10,6 +10,7 @@
   <artifactId>housekeeper</artifactId>
   <version>1.0-SNAPSHOT</version>
   <packaging>hpi</packaging>
+  <url>http://wiki.jenkins-ci.org/display/JENKINS/Housekeeper+Plugin</url>
 
   <licenses>
     <license>
@@ -17,6 +18,20 @@
       <url>http://opensource.org/licenses/MIT</url>
     </license>
   </licenses>
+
+  <scm>
+    <connection>scm:git:ssh://github.com/jenkinsci/housekeeper-plugin.git</connection>
+    <developerConnection>scm:git:ssh://git@github.com/jenkinsci/housekeeper-plugin.git</developerConnection>
+    <url>https://github.com/jenkinsci/housekeeper-plugin</url>
+  </scm>
+
+  <developers>
+    <developer>
+      <id>scarytom</id>
+      <name>Tom Denley</name>
+      <email>t.denley@cantab.net</email>
+    </developer>
+  </developers>
 
   <!-- get every artifact through repo.jenkins-ci.org, which proxies all the artifacts that we need -->
   <repositories>
