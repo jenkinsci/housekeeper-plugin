@@ -1,22 +1,22 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:d="jelly:define" xmlns:l="/lib/layout" xmlns:t="/lib/hudson" xmlns:f="/lib/form">
-  <f:section title="Housekeeper">
-        <f:entry name="enabled" title="Enabled" field="enabled">
-            <f:checkbox default="true" />
-        </f:entry> 
+  <f:section title="Housekeeper" help="/descriptor/org.jenkinsci.plugins.housekeeper.Housekeeper/help/housekeeper">
         <f:entry title="Checks">
           <f:repeatable field="checks">
               <table width="100%">
-                  <f:entry field="title" title="Title">
+                  <f:entry name="enabled" title="Enabled" field="enabled">
+                      <f:checkbox default="true" />
+                  </f:entry>
+                  <f:entry field="title" title="Title" help="/descriptor/org.jenkinsci.plugins.housekeeper.Housekeeper/help/title">
                       <f:textbox />
                   </f:entry>
-                  <f:entry field="command" title="Command">
+                  <f:entry field="command" title="Command" help="/descriptor/org.jenkinsci.plugins.housekeeper.Housekeeper/help/command">
                       <f:textbox />
                   </f:entry>
-                  <f:entry field="extractionRegEx" title="Extraction RegEx">
+                  <f:entry field="extractionRegEx" title="Extraction RegEx" help="/descriptor/org.jenkinsci.plugins.housekeeper.Housekeeper/help/extractionRegEx">
                       <f:textbox />
                   </f:entry>
-                  <f:entry field="whitelistRegExList" title="White List RegEx List">
-                      <f:textbox />
+                  <f:entry field="whitelistRegExList" title="White List RegExes" help="/descriptor/org.jenkinsci.plugins.housekeeper.Housekeeper/help/whitelistRegExList">
+                      <f:textarea />
                   </f:entry>
                   <f:entry>
                       <div align="right">

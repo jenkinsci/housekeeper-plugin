@@ -8,6 +8,7 @@ import hudson.util.StreamTaskListener;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,7 +41,7 @@ public final class Inspection extends InvisibleAction {
     }
 
     public boolean hasFailed() {
-        return !(failures.isEmpty() && before.containsAll(after));
+        return definition.isEnabled() && !(failures.isEmpty() && before.containsAll(after));
     }
 
     public String report() {
@@ -62,6 +63,10 @@ public final class Inspection extends InvisibleAction {
     }
 
     private Set<String> execute() {
+        if (!definition.isEnabled()) {
+            return Collections.emptySet();
+        }
+
         FilePath script = null;
         final ByteArrayOutputStream output = new ByteArrayOutputStream();
         try {
@@ -84,6 +89,6 @@ public final class Inspection extends InvisibleAction {
                 }
             } catch (Exception e1) { }
         }
-        return definition.process(output.toString().split("\\n"));
+        return definition.parse(output.toString().split("\\n"));
     }
 }

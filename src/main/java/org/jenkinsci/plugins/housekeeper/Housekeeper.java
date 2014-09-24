@@ -23,17 +23,12 @@ import net.sf.json.JSONObject;
 import org.kohsuke.stapler.StaplerRequest;
 import org.kohsuke.stapler.export.Exported;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
 
 @Extension(ordinal = Housekeeper.ORDINAL)
 public final class Housekeeper extends RunListener<AbstractBuild<?,?>> implements Describable<Housekeeper> {
 
     public static final int ORDINAL = 30001;
-
-    private transient final Iterable<InspectionDefinition> definitions = ImmutableList.of(
-                             new InspectionDefinition("Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*", ""),
-                             new InspectionDefinition("Processes", "ps --no-header -eo args", "(.*)", "sh /\\S+/housekeeper\\w+\\.sh"));
 
     @Override
     public Environment setUpEnvironment(@SuppressWarnings("rawtypes") AbstractBuild build, Launcher launcher, BuildListener listener) throws IOException, InterruptedException, RunnerAbortedException {
@@ -95,17 +90,14 @@ public final class Housekeeper extends RunListener<AbstractBuild<?,?>> implement
 
     @Extension
     public static class DescriptorImpl extends Descriptor<Housekeeper> {
-        private boolean enabled = true;
-        private InspectionDefinition[] checks = new InspectionDefinition[0];
+        private static final InspectionDefinition PORT_CHECK = new InspectionDefinition(false, "Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*", "");
+        private static final InspectionDefinition PROCESS_CHECK = new InspectionDefinition(false, "Processes", "ps --no-header -eo args", "(.*)", "sh /\\S+/housekeeper\\w+\\.sh");
+
+        private InspectionDefinition[] checks = new InspectionDefinition[] { PORT_CHECK, PROCESS_CHECK };
 
         @Exported
         public InspectionDefinition[] getChecks() {
             return checks;
-        }
-
-        @Exported
-        public boolean isEnabled() {
-            return enabled;
         }
 
         @Override
@@ -115,9 +107,12 @@ public final class Housekeeper extends RunListener<AbstractBuild<?,?>> implement
 
         @Override
         public boolean configure(StaplerRequest req, JSONObject json) throws hudson.model.Descriptor.FormException {
-            enabled = json.getBoolean("enabled");
             List<InspectionDefinition> checklist = req.bindJSONToList(InspectionDefinition.class, json.getJSONArray("checks"));
             this.checks = checklist.toArray(new InspectionDefinition[checklist.size()]);
+            if (this.checks.length == 0) {
+                this.checks = new InspectionDefinition[] { PORT_CHECK, PROCESS_CHECK };
+            }
+            save();
             return true;
         }
     }

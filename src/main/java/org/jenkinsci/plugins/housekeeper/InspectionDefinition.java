@@ -17,6 +17,7 @@ import com.google.common.collect.Sets;
 
 public final class InspectionDefinition extends AbstractDescribableImpl<InspectionDefinition> {
 
+    private final boolean enabled;
     private final String title;
     private final String command;
     private final String extractionRegEx;
@@ -26,7 +27,8 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
     private transient final Set<Pattern> whitelistPatterns = Sets.newHashSet();
 
     @DataBoundConstructor
-    public InspectionDefinition(String title, String command, String extractionRegEx, String whitelistRegExList) {
+    public InspectionDefinition(boolean enabled, String title, String command, String extractionRegEx, String whitelistRegExList) {
+        this.enabled = enabled;
         this.title = title;
         this.command = command;
         this.extractionRegEx = extractionRegEx;
@@ -35,6 +37,11 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
         for (String regEx : whitelistRegExList.split("\\r?\\n")) {
             this.whitelistPatterns.add(Pattern.compile(regEx));
         }
+    }
+
+    @Exported
+    public boolean isEnabled() {
+        return enabled;
     }
 
     @Exported
@@ -57,7 +64,7 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
         return whitelistRegExList;
     }
 
-    public Set<String> process(String[] outputData) {
+    public Set<String> parse(String[] outputData) {
         final Set<String> result = new HashSet<String>();
         for (String datum : outputData) {
             Matcher matcher = extractionPattern.matcher(datum);
