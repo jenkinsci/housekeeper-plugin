@@ -89,11 +89,15 @@ public final class Housekeeper extends RunListener<AbstractBuild<?,?>> implement
     }
 
     @Extension
-    public static class DescriptorImpl extends Descriptor<Housekeeper> {
+    public static final class DescriptorImpl extends Descriptor<Housekeeper> {
         private static final InspectionDefinition PORT_CHECK = new InspectionDefinition(false, "Open Ports", "netstat -tulpn", ".*\\:(\\d+) .*", "");
         private static final InspectionDefinition PROCESS_CHECK = new InspectionDefinition(false, "Processes", "ps --no-header -eo args", "(.*)", "sh /\\S+/housekeeper\\w+\\.sh");
 
         private InspectionDefinition[] checks = new InspectionDefinition[] { PORT_CHECK, PROCESS_CHECK };
+
+        public DescriptorImpl() {
+            load();
+        }
 
         @Exported
         public InspectionDefinition[] getChecks() {
