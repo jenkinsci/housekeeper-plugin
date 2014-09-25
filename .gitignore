@@ -12,6 +12,8 @@ bin/
 # Maven
 target/
 work/
+release.properties
+pom.xml.releaseBackup
 
 # MacOS
 .DS_Store
