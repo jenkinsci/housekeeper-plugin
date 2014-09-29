@@ -23,8 +23,8 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
     private final String extractionRegEx;
     private final String whitelistRegExList;
 
-    private transient final Pattern extractionPattern;
-    private transient final Set<Pattern> whitelistPatterns = Sets.newHashSet();
+    private transient Pattern extractionPattern;
+    private transient Set<Pattern> whitelistPatterns;
 
     @DataBoundConstructor
     public InspectionDefinition(boolean enabled, String title, String command, String extractionRegEx, String whitelistRegExList) {
@@ -33,10 +33,26 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
         this.command = command;
         this.extractionRegEx = extractionRegEx;
         this.whitelistRegExList = whitelistRegExList;
-        this.extractionPattern = Pattern.compile(extractionRegEx);
-        for (String regEx : whitelistRegExList.split("\\r?\\n")) {
-            this.whitelistPatterns.add(Pattern.compile(regEx));
+        extractor();
+        whitelist();
+    }
+
+    private Pattern extractor() {
+        if (extractionPattern == null) {
+            extractionPattern = Pattern.compile(extractionRegEx);
         }
+        return extractionPattern;
+    }
+
+    private Set<Pattern> whitelist() {
+        if (whitelistPatterns == null) {
+            HashSet<Pattern> patterns = Sets.newHashSet();
+            for (String regEx : whitelistRegExList.split("\\r?\\n")) {
+                patterns.add(Pattern.compile(regEx));
+            }
+            whitelistPatterns = patterns;
+        }
+        return whitelistPatterns;
     }
 
     @Exported
@@ -67,7 +83,7 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
     public Set<String> parse(String[] outputData) {
         final Set<String> result = new HashSet<String>();
         for (String datum : outputData) {
-            Matcher matcher = extractionPattern.matcher(datum);
+            Matcher matcher = extractor().matcher(datum);
             if (matcher.matches()) {
                 final String candidate = matcher.group(1);
                 if (!whitelisted(candidate)) {
@@ -75,12 +91,11 @@ public final class InspectionDefinition extends AbstractDescribableImpl<Inspecti
                 }
             }
         }
-        result.removeAll(whitelistPatterns);
         return ImmutableSet.copyOf(result);
     }
 
     private boolean whitelisted(String candidate) {
-        for (Pattern pattern : whitelistPatterns) {
+        for (Pattern pattern : whitelist()) {
             if (pattern.matcher(candidate).matches()) {
                 return true;
             }
