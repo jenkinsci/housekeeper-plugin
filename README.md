@@ -12,6 +12,9 @@ https://wiki.jenkins-ci.org/display/JENKINS/Plugin+tutorial
 ## Hosting Tutorial
 https://wiki.jenkins-ci.org/display/JENKINS/Hosting+Plugins
 
+Should be available here:
+https://updates.jenkins-ci.org/download/plugins/
+
 ## Readying for Eclipse development
 
   mvn -DdownloadSources=true -DdownloadJavadocs=true -DoutputDirectory=target/eclipse-classes eclipse:eclipse
